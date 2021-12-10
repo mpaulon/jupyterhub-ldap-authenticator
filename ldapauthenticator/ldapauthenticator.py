@@ -374,17 +374,15 @@ class LDAPAuthenticator(Authenticator):
         return server
 
     def ldap_connection(self,
-                        server_pool: ldap3.ServerPool,
+                        server: ldap3.Server,
                         username: str,
                         password: str) -> ldap3.Connection:
         """
         Create ldap(s) Connection Object
         """
-        # attempt connection
-        conn = ldap3.Connection(server_pool, authentication=ldap3.SASL, sasl_mechanism=ldap3.EXTERNAL, sasl_credentials='')
         try:
             conn = ldap3.Connection(
-                server_pool,
+                server,
                 user=username,
                 password=password,
                 auto_bind=ldap3.AUTO_BIND_NO_TLS,
@@ -436,8 +434,8 @@ class LDAPAuthenticator(Authenticator):
         # define vars
         username = data['username']
         password = data['password']
-        server_pool = self.create_ldap_server_pool_obj()
-        conn_servers = list()
+        # server_pool = self.create_ldap_server_pool_obj()
+        # conn_servers = list()
 
         # validate credentials
         username = username.lower()
@@ -461,11 +459,9 @@ class LDAPAuthenticator(Authenticator):
             #     break
             self.log.info(f"Found host {host}")
             server = self.create_ldap_server_obj(host)
-            server_pool.add(server)
-            conn_servers.extend([host])
 
         # verify ldap connection object parameters are defined
-        if not server_pool.servers:
+        if not self.server_hosts:
             self.log.error(
                 "No hosts provided. ldap connection requires at least 1 host to connect to.")
             return None
@@ -488,9 +484,9 @@ class LDAPAuthenticator(Authenticator):
 
         # open ldap connection and authenticate
         self.log.debug("Attempting ldap connection to {} with user '{}'".format(
-            conn_servers, self.bind_user_dn))
+            server, self.bind_user_dn))
         conn = self.ldap_connection(
-            server_pool,
+            server,
             self.bind_user_dn,
             self.bind_user_password)
 
@@ -498,12 +494,12 @@ class LDAPAuthenticator(Authenticator):
         if not conn or not conn.bind():
             self.log.error(("Could not establish ldap connection to {} using '{}' " +
                             "and supplied bind_user_password.").format(
-                                conn_servers, self.bind_user_dn))
+                                server, self.bind_user_dn))
             return None
         else:
             self.log.debug(
                 "Successfully established connection to {} with user '{}'".format(
-                    conn_servers, self.bind_user_dn))
+                    server, self.bind_user_dn))
 
             # format user search filter
             auth_user_search_filter = self.user_search_filter.format(
@@ -594,11 +590,11 @@ class LDAPAuthenticator(Authenticator):
                 if auth_bound:
                     self.log.info(
                         "User '{}' successfully authenticated against ldap server {}.".format(
-                            username, conn_servers))
+                            username, server))
                     auth_response = username
                 else:
                     self.log.error(
                         "User '{}' authentication failed against ldap server {}.".format(
-                            conn_servers, auth_user_dn))
+                            server, auth_user_dn))
                     auth_response = None
                 return auth_response
