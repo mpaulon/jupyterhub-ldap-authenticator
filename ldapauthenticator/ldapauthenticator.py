@@ -381,6 +381,7 @@ class LDAPAuthenticator(Authenticator):
         Create ldap(s) Connection Object
         """
         # attempt connection
+        conn = ldap3.Connection(server_pool, authentication=ldap3.SASL, sasl_mechanism=ldap3.EXTERNAL, sasl_credentials='')
         try:
             conn = ldap3.Connection(
                 server_pool,
@@ -458,6 +459,7 @@ class LDAPAuthenticator(Authenticator):
             #     self.log.warning(("Host '{}' not supplied in approved format. " +
             #                       "Removing host from Server Pool").format(host))
             #     break
+            self.log.info(f"Found host {host}")
             server = self.create_ldap_server_obj(host)
             server_pool.add(server)
             conn_servers.extend([host])
