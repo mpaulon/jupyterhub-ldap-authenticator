@@ -451,10 +451,10 @@ class LDAPAuthenticator(Authenticator):
         # validate hosts and populate server_pool object
         for host in self.server_hosts:
             host = host.strip().lower()
-            if not self.validate_host(host):
-                self.log.warning(("Host '{}' not supplied in approved format. " +
-                                  "Removing host from Server Pool").format(host))
-                break
+            # if not self.validate_host(host):
+            #     self.log.warning(("Host '{}' not supplied in approved format. " +
+            #                       "Removing host from Server Pool").format(host))
+            #     break
             server = self.create_ldap_server_obj(host)
             server_pool.add(server)
             conn_servers.extend([host])
