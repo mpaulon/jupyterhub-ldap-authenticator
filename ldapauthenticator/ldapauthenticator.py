@@ -362,12 +362,15 @@ class LDAPAuthenticator(Authenticator):
         """
         Create ldap3 Server Object
         """
-        server = ldap3.Server(
-            host,
-            port=self.server_port,
-            use_ssl=self.server_use_ssl,
-            connect_timeout=self.server_connect_timeout
-        )
+        if host == "ldapi://":
+            server = ldap3.Server('ldapi:///var/run/slapd/ldapi')
+        else:
+            server = ldap3.Server(
+                host,
+                port=self.server_port,
+                use_ssl=self.server_use_ssl,
+                connect_timeout=self.server_connect_timeout
+            )
         return server
 
     def ldap_connection(self,
